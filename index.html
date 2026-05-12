@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thank You, Ma'am — ELD Advanced</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf8f4;
+  --surface: #ffffff;
+  --surface2: #f3f0ea;
+  --border: #e2ddd4;
+  --text: #1a1714;
+  --muted: #7a746a;
+  --accent: #1a3a5c;
+  --accent-light: #e8eef5;
+  --accent-mid: #2d5f8a;
+  --green: #1a5c3a;
+  --green-light: #e8f5ee;
+  --amber: #7a4a00;
+  --amber-light: #fef3e2;
+  --red: #7a1a1a;
+  --red-light: #fdeaea;
+  --teacher: #3a1a5c;
+  --teacher-light: #f0eaf8;
+  --score-bg: #1a3a5c;
+  --score-text: #ffffff;
+  --radius: 10px;
+  --radius-lg: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+
+/* ── LOGIN ── */
+#login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+.login-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2.5rem; max-width: 420px; width: 100%; }
+.login-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; margin-bottom: 4px; color: var(--accent); }
+.login-sub { font-size: 13px; color: var(--muted); margin-bottom: 2rem; }
+.field-label { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; display: block; }
+.field-input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; background: var(--bg); color: var(--text); margin-bottom: 1rem; transition: border-color 0.15s; }
+.field-input:focus { outline: none; border-color: var(--accent-mid); }
+.login-btn { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+.login-btn:hover { background: var(--accent-mid); }
+.login-err { font-size: 13px; color: var(--red); background: var(--red-light); padding: 8px 12px; border-radius: var(--radius); margin-top: 10px; display: none; }
+
+/* ── APP SHELL ── */
+#app { display: none; }
+.top-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.5rem; display: flex; align-items: center; gap: 1rem; height: 52px; position: sticky; top: 0; z-index: 100; }
+.top-title { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 500; font-style: italic; color: var(--accent); flex: 1; }
+.top-user { font-size: 13px; color: var(--muted); }
+.score-badge { background: var(--score-bg); color: var(--score-text); font-size: 13px; font-weight: 500; padding: 4px 14px; border-radius: 20px; display: none; white-space: nowrap; }
+.score-badge.visible { display: inline-block; }
+.logout-btn { font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 10px; cursor: pointer; }
+.logout-btn:hover { color: var(--text); }
+
+/* ── TABS ── */
+.tab-nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.5rem; display: flex; gap: 2px; overflow-x: auto; }
+.tab-btn { padding: 12px 16px; border: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.15s; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+.tab-btn.teacher-tab { color: var(--teacher); }
+.tab-btn.teacher-tab.active { color: var(--teacher); border-bottom-color: var(--teacher); }
+
+/* ── CONTENT ── */
+.tab-content { display: none; max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.tab-content.active { display: block; }
+.section-heading { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 500; color: var(--accent); margin-bottom: 4px; }
+.section-sub { font-size: 14px; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.5; }
+
+/* ── SCORE DISPLAY (student top of comp tab) ── */
+.score-display { background: var(--accent); color: white; border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: none; }
+.score-display.visible { display: flex; align-items: center; gap: 1rem; }
+.score-display .score-big { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; }
+.score-display .score-info { flex: 1; }
+.score-display .score-label { font-size: 13px; opacity: 0.75; }
+.score-display .score-comment { font-size: 14px; margin-top: 2px; }
+
+/* ── CARDS ── */
+.q-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
+.q-num { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.q-text { font-size: 15px; color: var(--text); margin-bottom: 12px; line-height: 1.65; }
+.quote-pull { border-left: 3px solid var(--accent-mid); padding: 8px 14px; margin: 10px 0 12px; font-style: italic; font-size: 14px; color: var(--muted); border-radius: 0; }
+
+/* choices */
+.choices { display: flex; flex-direction: column; gap: 7px; }
+.choice-btn { padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; text-align: left; cursor: pointer; transition: all 0.12s; line-height: 1.5; }
+.choice-btn:hover:not(:disabled) { background: var(--accent-light); border-color: var(--accent-mid); }
+.choice-btn.correct { background: var(--green-light); color: var(--green); border-color: transparent; }
+.choice-btn.wrong { background: var(--red-light); color: var(--red); border-color: transparent; }
+.choice-btn:disabled { cursor: default; }
+
+/* textarea */
+.ans-textarea { width: 100%; min-height: 90px; resize: vertical; font-family: 'DM Sans', sans-serif; font-size: 14px; border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; background: var(--bg); color: var(--text); transition: border-color 0.15s; }
+.ans-textarea:focus { outline: none; border-color: var(--accent-mid); }
+
+/* feedback message */
+.fb-msg { font-size: 14px; margin-top: 8px; padding: 8px 12px; border-radius: var(--radius); line-height: 1.5; display: none; }
+.fb-msg.ok { background: var(--green-light); color: var(--green); display: block; }
+.fb-msg.bad { background: var(--red-light); color: var(--red); display: block; }
+.fb-msg.hint { background: var(--amber-light); color: var(--amber); display: block; }
+
+/* ── TEACHER GRADE FIELDS ── */
+.teacher-fields { margin-top: 10px; padding: 10px 12px; background: var(--teacher-light); border-radius: var(--radius); border: 1px dashed #c9b8e8; display: none; }
+.teacher-fields.visible { display: block; }
+.tf-row { display: flex; gap: 10px; align-items: flex-start; }
+.tf-score-wrap { display: flex; flex-direction: column; gap: 4px; min-width: 80px; }
+.tf-comment-wrap { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.tf-label { font-size: 11px; font-weight: 500; color: var(--teacher); text-transform: uppercase; letter-spacing: 0.05em; }
+.tf-score-input { width: 80px; padding: 6px 10px; border: 1px solid #c9b8e8; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; background: white; color: var(--teacher); }
+.tf-comment-input { width: 100%; padding: 6px 10px; border: 1px solid #c9b8e8; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 13px; background: white; color: var(--teacher); resize: vertical; min-height: 54px; }
+.tf-save-btn { padding: 5px 12px; background: var(--teacher); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; margin-top: 6px; }
+.tf-save-btn:hover { opacity: 0.85; }
+
+/* student sees teacher feedback */
+.teacher-feedback-display { margin-top: 10px; padding: 10px 14px; background: var(--teacher-light); border-radius: var(--radius); border-left: 3px solid var(--teacher); display: none; }
+.teacher-feedback-display.visible { display: block; }
+.tfd-score { font-size: 13px; font-weight: 500; color: var(--teacher); }
+.tfd-comment { font-size: 13px; color: var(--teacher); margin-top: 3px; }
+
+/* disabled fields for student */
+.field-disabled { background: var(--surface2) !important; color: var(--muted) !important; cursor: not-allowed !important; }
+
+/* row buttons */
+.row-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.btn { padding: 8px 18px; border: 1px solid var(--border); border-radius: var(--radius); background: transparent; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); cursor: pointer; transition: all 0.12s; }
+.btn:hover { background: var(--surface2); }
+.btn-primary { background: var(--accent); color: white; border-color: transparent; }
+.btn-primary:hover { background: var(--accent-mid); }
+.btn-ai { background: var(--surface2); color: var(--accent); border-color: var(--accent-light); font-size: 13px; }
+.btn-ai:hover { background: var(--accent-light); }
+
+/* vocab */
+.vocab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+.vcol { display: flex; flex-direction: column; gap: 7px; }
+.vitem { padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; cursor: pointer; background: var(--surface); color: var(--text); transition: all 0.12s; text-align: center; }
+.vitem:hover:not(.matched):not(.disabled) { background: var(--accent-light); }
+.vitem.sel { border-color: var(--accent-mid); background: var(--accent-light); color: var(--accent); }
+.vitem.matched { background: var(--green-light); color: var(--green); border-color: transparent; cursor: default; }
+
+/* sequence */
+.seq-list { display: flex; flex-direction: column; gap: 8px; }
+.seq-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); cursor: grab; background: var(--surface); font-size: 14px; color: var(--text); line-height: 1.5; user-select: none; }
+.seq-item.dragging { opacity: 0.4; }
+.seq-item.drag-over { border-color: var(--accent-mid); background: var(--accent-light); }
+.seq-num { font-size: 12px; font-weight: 500; color: var(--muted); min-width: 20px; margin-top: 1px; }
+.drag-icon { color: var(--muted); font-size: 16px; margin-top: 1px; }
+
+/* fill blank */
+.fill-line { font-size: 15px; line-height: 2.4; color: var(--text); }
+.fill-line input { display: inline-block; width: 140px; border: none; border-bottom: 2px solid var(--accent-mid); background: transparent; font-size: 15px; color: var(--text); padding: 2px 4px; font-family: 'DM Sans', sans-serif; outline: none; margin: 0 5px; }
+
+/* progress bar */
+.prog-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; }
+.prog-bar { flex: 1; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.prog-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+.prog-label { font-size: 13px; color: var(--muted); min-width: 40px; text-align: right; }
+
+/* discussion starters */
+.starter-box { background: var(--surface2); border-radius: var(--radius); padding: 8px 12px; font-size: 13px; font-style: italic; color: var(--muted); margin: 3px 0; line-height: 1.6; }
+.starter-box b { font-style: normal; color: var(--text); font-weight: 500; }
+
+/* AI feedback panel */
+.ai-panel { margin-top: 12px; padding: 12px 14px; background: var(--accent-light); border-radius: var(--radius); font-size: 14px; color: var(--accent); line-height: 1.65; display: none; border: 1px solid #c5d8ec; }
+.ai-panel.visible { display: block; }
+.ai-thinking { color: var(--muted); font-style: italic; }
+
+/* ── DASHBOARD ── */
+.dash-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.dash-title { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--teacher); }
+.student-select { padding: 8px 14px; border: 1px solid #c9b8e8; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; background: white; color: var(--teacher); min-width: 220px; }
+.total-score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; padding: 12px 16px; background: var(--teacher-light); border-radius: var(--radius-lg); border: 1px solid #c9b8e8; }
+.total-score-label { font-size: 14px; font-weight: 500; color: var(--teacher); }
+.total-score-input { padding: 6px 12px; border: 1px solid #c9b8e8; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; color: var(--teacher); background: white; width: 120px; }
+.total-score-btn { padding: 7px 16px; background: var(--teacher); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; }
+.total-score-btn:hover { opacity: 0.85; }
+.dash-answers { display: flex; flex-direction: column; gap: 10px; }
+.dash-q { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; }
+.dash-q-label { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.dash-q-text { font-size: 14px; color: var(--muted); margin-bottom: 8px; font-style: italic; }
+.dash-q-answer { font-size: 14px; color: var(--text); background: var(--bg); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 10px; line-height: 1.6; min-height: 32px; }
+.dash-grade-row { display: flex; gap: 10px; align-items: flex-start; }
+.dash-score-input { width: 90px; padding: 7px 10px; border: 1px solid #c9b8e8; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 14px; background: white; color: var(--teacher); }
+.dash-comment-input { flex: 1; padding: 7px 10px; border: 1px solid #c9b8e8; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 13px; background: white; color: var(--teacher); resize: none; min-height: 60px; }
+.dash-save-btn { padding: 7px 14px; background: var(--teacher); color: white; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; white-space: nowrap; align-self: flex-end; }
+.dash-save-btn:hover { opacity: 0.85; }
+.dash-saved-msg { font-size: 12px; color: var(--green); margin-top: 4px; display: none; }
+.no-answer { color: var(--muted); font-style: italic; font-size: 13px; }
+
+/* save indicator */
+.save-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); display: inline-block; margin-left: 6px; transition: background 0.3s; }
+.save-dot.saving { background: var(--amber); }
+.save-dot.saved { background: var(--green); }
+
+/* responsive */
+@media (max-width: 600px) {
+  .vocab-grid { grid-template-columns: 1fr; }
+  .tab-content { padding: 1.25rem 1rem 3rem; }
+  .tf-row { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px">Galileo HS · ELD Advanced · Room 304</div>
+    <div class="login-title">Thank You, Ma'am</div>
+    <div class="login-sub">by Langston Hughes — Post-Reading Activities</div>
+    <label class="field-label" for="inp-name">Your first name</label>
+    <input class="field-input" id="inp-name" type="text" placeholder="e.g. Maria" autocomplete="off">
+    <label class="field-label" for="inp-user">Username</label>
+    <input class="field-input" id="inp-user" type="text" placeholder="e.g. emluo4" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Enter activity</button>
+    <div class="login-err" id="login-err">That username is not on the class list. Please check your spelling and try again.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="top-bar">
+    <div class="top-title">Thank You, Ma'am</div>
+    <span class="top-user" id="top-user-name"></span>
+    <span class="score-badge" id="top-score-badge"></span>
+    <span class="save-dot" id="save-dot" title="Auto-save"></span>
+    <button class="logout-btn" onclick="doLogout()">Log out</button>
+  </div>
+
+  <div class="tab-nav" id="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('comp',this)">Comprehension</button>
+    <button class="tab-btn" onclick="switchTab('vocab',this)">Vocabulary</button>
+    <button class="tab-btn" onclick="switchTab('seq',this)">Story order</button>
+    <button class="tab-btn" onclick="switchTab('chars',this)">Characters</button>
+    <button class="tab-btn" onclick="switchTab('theme',this)">Theme</button>
+    <button class="tab-btn" onclick="switchTab('discuss',this)">Discussion</button>
+    <button class="tab-btn" onclick="switchTab('devil',this)">Devilish shoes</button>
+    <button class="tab-btn teacher-tab" id="teacher-tab-btn" style="display:none" onclick="switchTab('dashboard',this)">Teacher dashboard</button>
+  </div>
+
+  <!-- COMPREHENSION -->
+  <div class="tab-content active" id="tab-comp">
+    <div class="score-display" id="score-display">
+      <div class="score-big" id="score-display-val">—</div>
+      <div class="score-info">
+        <div class="score-label">Your score from Mr. Rugger</div>
+        <div class="score-comment" id="score-display-comment"></div>
+      </div>
+    </div>
+    <div class="prog-wrap" id="comp-prog-wrap" style="display:none">
+      <div class="prog-bar"><div class="prog-fill" id="comp-prog-fill" style="width:0%"></div></div>
+      <div class="prog-label" id="comp-prog-label">0/6</div>
+    </div>
+    <p class="section-heading">Comprehension — going deeper</p>
+    <p class="section-sub">These questions ask you to think beyond the facts. Use your reading guide notes to help you.</p>
+    <div id="comp-list"></div>
+  </div>
+
+  <!-- VOCAB -->
+  <div class="tab-content" id="tab-vocab">
+    <p class="section-heading">Vocabulary match</p>
+    <p class="section-sub">Click a word on the left, then click its meaning on the right. Match all 6 pairs. Then complete the fill-in-the-blank sentences below.</p>
+    <div class="vocab-grid"><div class="vcol" id="vw-col"></div><div class="vcol" id="vd-col"></div></div>
+    <div class="fb-msg" id="vocab-fb"></div>
+    <div id="fill-section" style="display:none;margin-top:1.5rem">
+      <p class="section-heading" style="font-size:18px">Fill in the blanks</p>
+      <p class="section-sub">Use the vocabulary words to complete each sentence.</p>
+      <div id="fill-list"></div>
+      <div class="row-btns"><button class="btn btn-primary" onclick="checkFill()">Check answers</button><button class="btn" onclick="resetFill()">Try again</button></div>
+      <div class="fb-msg" id="fill-total-fb"></div>
+    </div>
+  </div>
+
+  <!-- SEQUENCE -->
+  <div class="tab-content" id="tab-seq">
+    <p class="section-heading">Put the story in order</p>
+    <p class="section-sub">Drag and drop the 7 events into the correct order, from first to last.</p>
+    <div class="seq-list" id="seq-list"></div>
+    <div class="row-btns">
+      <button class="btn btn-primary" onclick="checkSeq()">Check my order</button>
+      <button class="btn" onclick="shuffleSeq()">Shuffle again</button>
+    </div>
+    <div class="fb-msg" id="seq-fb"></div>
+  </div>
+
+  <!-- CHARACTERS -->
+  <div class="tab-content" id="tab-chars">
+    <p class="section-heading">Character analysis</p>
+    <p class="section-sub">Read the quote. Answer the question about what it shows. Use details from the story.</p>
+    <div id="chars-list"></div>
+  </div>
+
+  <!-- THEME -->
+  <div class="tab-content" id="tab-theme">
+    <p class="section-heading">Theme and personal response</p>
+    <p class="section-sub">Write your own ideas. Use examples from the story AND your own life. There are no wrong answers.</p>
+    <div id="theme-list"></div>
+  </div>
+
+  <!-- DISCUSSION -->
+  <div class="tab-content" id="tab-discuss">
+    <p class="section-heading">Speaking and discussion</p>
+    <p class="section-sub">Use the sentence starters to talk with a partner. Write your answer too. Try to write 2–4 sentences.</p>
+    <div id="discuss-list"></div>
+  </div>
+
+  <!-- DEVILISH SHOES -->
+  <div class="tab-content" id="tab-devil">
+    <p class="section-heading">The devilish shoes</p>
+    <p class="section-sub">Mrs. Jones says: <em style="color:var(--muted)">"Shoes come by devilish like that will burn your feet."</em><br>Work through each step to understand what she really means.</p>
+    <div id="devil-list"></div>
+  </div>
+
+  <!-- TEACHER DASHBOARD -->
+  <div class="tab-content" id="tab-dashboard">
+    <div class="dash-header">
+      <div class="dash-title">Teacher dashboard</div>
+      <select class="student-select" id="dash-student-select" onchange="loadDashStudent()">
+        <option value="">— select a student —</option>
+      </select>
+    </div>
+    <div id="dash-total-row" class="total-score-row" style="display:none">
+      <span class="total-score-label">Total score for <span id="dash-student-name-label"></span>:</span>
+      <input class="total-score-input" id="dash-total-input" type="text" placeholder="e.g. 18/24">
+      <button class="total-score-btn" onclick="saveTotalScore()">Save score</button>
+      <span style="font-size:13px;color:var(--green);margin-left:8px;display:none" id="total-saved-msg">Saved!</span>
+    </div>
+    <div id="dash-answers"></div>
+  </div>
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://lhmwtfyceilgndpygivj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxobXd0ZnljZWlsZ25kcHlnaXZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk5MDIsImV4cCI6MjA5MTcxNTkwMn0.0uIXyctHMfTN4doWYn2JJ260swD5b-t0T-oDMSIPtBU';
+const ANTHROPIC_KEY = ''; // Leave empty — Claude feedback via proxy not available in plain HTML; handled via AI button text
+
+// ─── ROSTER ───────────────────────────────────────────────────────────────────
+const ROSTER = [
+  {name:'Shaskia Abanto Mejia', username:'shabantomejia'},
+  {name:'Lester Bamaca Jeronimo', username:'lebamacajeronimo'},
+  {name:'Khawla Benzahra', username:'khbenzahra'},
+  {name:'Monica Bojorquez Martinez', username:'mobojorquezmartin'},
+  {name:'William Cerrato Meza', username:'wicerratomeza'},
+  {name:'Jorge Donis Chirin', username:'jodonischirin'},
+  {name:'Chong Zu Huang', username:'chhuang26'},
+  {name:'Zeidy Kauil Kantun', username:'zekauilkantun'},
+  {name:'Binghui Li', username:'bili2'},
+  {name:'Zongyuan Li', username:'zoli6'},
+  {name:'Xinrui Liang', username:'xiliang12'},
+  {name:'Phuc Lieu', username:'phlieu'},
+  {name:'Johnny Liu', username:'joliu18'},
+  {name:'Emily Luo', username:'emluo4'},
+  {name:'Jiahao Ma', username:'jima11'},
+  {name:'Marcos May Quintal', username:'mamayquintal'},
+  {name:'Victoria Moleiro Corrales', username:'vimoleirocorrales'},
+  {name:'Truong Ngo', username:'trngo'},
+  {name:'Tam Nguyen', username:'tatruong2'},
+  {name:'Mariemilia Pozo Celi', username:'mapozoceli'},
+  {name:'Mohammed Rachedi', username:'morachedi'},
+  {name:'Allan Ramos Garcia', username:'alramosgarcia'},
+  {name:'Jonathan Soler Boquin', username:'josolerboquin'},
+  {name:'Rodrigo Suria Solito', username:'rosuriasolito'},
+  {name:'Xueyi Wu', username:'xuwu3'},
+  {name:'Kaiwei Xue', username:'kaxue'},
+  {name:'Leyi Zhou', username:'lezhou4'},
+  {name:'Tobias Rugger', username:'teacher'},
+  {name:'Guest', username:'other'},
+];
+const TEACHER_USERNAMES = ['teacher','other'];
+const USERNAME_SET = new Set(ROSTER.map(r=>r.username.toLowerCase()));
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let currentUser = null; // {username, firstName, isTeacher}
+let compScore = 0, compAnswered = 0;
+let vocabMatched = 0, vocabSelWord = null, vocabSelDef = null;
+let seqCurrent = [];
+let saveTimer = null;
+
+// ─── SUPABASE HELPERS ─────────────────────────────────────────────────────────
+async function sbFetch(path, opts={}) {
+  const res = await fetch(SUPABASE_URL + path, {
+    headers: {'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal', ...opts.headers},
+    ...opts
+  });
+  if (opts.expectJson !== false) {
+    try { return await res.json(); } catch { return null; }
+  }
+  return res;
+}
+
+async function saveAnswer(tab, qkey, answer) {
+  showSaveDot('saving');
+  await sbFetch('/rest/v1/tyma_answers', {
+    method: 'POST',
+    headers: {'Prefer': 'resolution=merge-duplicates,return=minimal'},
+    body: JSON.stringify({username: currentUser.username, first_name: currentUser.firstName, tab, question_key: qkey, answer, updated_at: new Date().toISOString()})
+  });
+  showSaveDot('saved');
+  setTimeout(()=>showSaveDot(''),2000);
+}
+
+async function loadAnswers(username) {
+  const data = await sbFetch(`/rest/v1/tyma_answers?username=eq.${username}&select=tab,question_key,answer`, {method:'GET', headers:{'Prefer':''}});
+  const map = {};
+  if (Array.isArray(data)) data.forEach(r => { map[r.tab+'_'+r.question_key] = r.answer; });
+  return map;
+}
+
+async function loadGrades(username) {
+  const data = await sbFetch(`/rest/v1/tyma_grades?username=eq.${username}&select=question_key,score,comment`, {method:'GET', headers:{'Prefer':''}});
+  const map = {};
+  if (Array.isArray(data)) data.forEach(r => { map[r.question_key] = {score: r.score, comment: r.comment}; });
+  return map;
+}
+
+async function saveGrade(username, qkey, score, comment) {
+  await sbFetch('/rest/v1/tyma_grades', {
+    method: 'POST',
+    headers: {'Prefer': 'resolution=merge-duplicates,return=minimal'},
+    body: JSON.stringify({username, question_key: qkey, score, comment, updated_at: new Date().toISOString()})
+  });
+}
+
+async function loadTotalScore(username) {
+  const data = await sbFetch(`/rest/v1/tyma_totals?username=eq.${username}&select=total_score`, {method:'GET', headers:{'Prefer':''}});
+  if (Array.isArray(data) && data.length > 0) return data[0].total_score;
+  return '';
+}
+
+async function saveTotalScoreDB(username, score) {
+  await sbFetch('/rest/v1/tyma_totals', {
+    method: 'POST',
+    headers: {'Prefer': 'resolution=merge-duplicates,return=minimal'},
+    body: JSON.stringify({username, total_score: score, updated_at: new Date().toISOString()})
+  });
+}
+
+function showSaveDot(state) {
+  const d = document.getElementById('save-dot');
+  d.className = 'save-dot' + (state ? ' '+state : '');
+}
+
+// ─── LOGIN ────────────────────────────────────────────────────────────────────
+function doLogin() {
+  const firstName = document.getElementById('inp-name').value.trim();
+  const username = document.getElementById('inp-user').value.trim().toLowerCase();
+  const err = document.getElementById('login-err');
+  if (!firstName) { err.textContent = 'Please enter your first name.'; err.style.display = 'block'; return; }
+  if (!USERNAME_SET.has(username)) { err.textContent = 'That username is not on the class list. Please check your spelling and try again.'; err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  const isTeacher = TEACHER_USERNAMES.includes(username);
+  currentUser = {username, firstName, isTeacher};
+  sessionStorage.setItem('tyma_user', JSON.stringify(currentUser));
+  startApp();
+}
+
+function doLogout() {
+  sessionStorage.removeItem('tyma_user');
+  currentUser = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+async function startApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('top-user-name').textContent = currentUser.firstName;
+  if (currentUser.isTeacher) {
+    document.getElementById('teacher-tab-btn').style.display = 'inline-block';
+  }
+  buildAll();
+  const answers = await loadAnswers(currentUser.username);
+  const grades = await loadGrades(currentUser.username);
+  restoreAnswers(answers);
+  applyGrades(grades);
+  // Load total score for student display
+  const total = await loadTotalScore(currentUser.username);
+  if (total) showTotalScore(total);
+}
+
+// ─── CONTENT DATA ─────────────────────────────────────────────────────────────
+const COMP_QS = [
+  {key:'comp_0', q:'Roger does not run away even though the door is open. What does this tell us about how he feels toward Mrs. Jones?', choices:['He is too tired to run','He is beginning to trust her and feels safe','He is afraid she will chase him','He wants to steal her purse again'], ans:1},
+  {key:'comp_1', q:'Mrs. Jones does not watch her purse and does not ask Roger about his home life. Why?', choices:['She forgot where she put her purse','She wants to show she trusts him and does not want him to feel ashamed','She is too busy cooking dinner','She thinks Roger would never steal again'], ans:1},
+  {key:'comp_2', q:'Mrs. Jones says she made mistakes when she was young but does not say what they were. Why not?', choices:['She is embarrassed','The details are not important — what matters is that she understands him','She is lying — she never made any mistakes','She does not speak English well enough'], ans:1},
+  {key:'comp_3', q:'At the end, Roger wants to say more than "thank you" but cannot. What do you think he wants to say?', choices:['He wants to ask for more money','He feels overwhelmed by gratitude, guilt, and connection — too much to put into words','He wants to apologize for ripping her purse strap','He is angry that she did not let him stay longer'], ans:1},
+  {key:'comp_4', q:'Which best describes what Mrs. Jones believes about young people who do wrong?', choices:['They are dangerous and must be punished harshly','They should be sent to the police immediately','They often have hard lives and can change if someone shows them kindness','They are beyond help and will never learn'], ans:2},
+  {key:'comp_5', q:'The story takes place late at night on a dark street. Why is this setting important?', choices:['It shows Mrs. Jones walks very slowly','It makes the reader think Roger will definitely escape','It makes the theft feel more dangerous and shows how alone both characters are','Hughes chose night because it is his favorite time of day'], ans:2},
+];
+
+const VOCAB_PAIRS = [
+  {word:'frail', def:'weak; not strong physically'},
+  {word:'permit', def:'to allow or let something happen'},
+  {word:'presentable', def:'clean and neat in appearance'},
+  {word:'stoop', def:'steps at the entrance of a building'},
+  {word:'mistrust', def:'a feeling that you cannot trust someone'},
+  {word:'contact', def:'to reach out and communicate with someone'},
+];
+
+const FILL_SENTS = [
+  {key:'fill_0', pre:'Roger looked', blank:'frail', post:'— thin and pale, like he hadn\'t eaten in days.', hint:'weak in body'},
+  {key:'fill_1', pre:'Mrs. Jones did not', blank:'permit', post:'Roger to leave without eating first.', hint:'allow'},
+  {key:'fill_2', pre:'Roger wanted to look', blank:'presentable', post:'so Mrs. Jones would not think badly of him.', hint:'clean and neat'},
+  {key:'fill_3', pre:'Roger had no adult he could', blank:'contact', post:'at home that night.', hint:'reach out to'},
+];
+
+const SEQ_EVENTS = [
+  {t:'Roger tries to snatch Mrs. Jones\'s purse on the street late at night.', o:0},
+  {t:'Mrs. Jones kicks Roger, grabs him by his shirt, and shakes him.', o:1},
+  {t:'Instead of calling the police, Mrs. Jones drags Roger to her room.', o:2},
+  {t:'Mrs. Jones tells Roger to wash his face and makes him dinner.', o:3},
+  {t:'Mrs. Jones shares that she also made mistakes when she was young.', o:4},
+  {t:'Mrs. Jones gives Roger ten dollars to buy the shoes he wanted.', o:5},
+  {t:'Roger says "Thank you, ma\'am" but the door closes before he can say more.', o:6},
+];
+
+const CHAR_QS = [
+  {key:'chars_0', char:'Mrs. Jones', quote:'"You ought to be my son. I would teach you right from wrong."', q:'What does this tell us about how Mrs. Jones sees Roger? What kind of person is she?', ph:'Write 2–3 sentences about Mrs. Jones...'},
+  {key:'chars_1', char:'Roger', quote:'"The boy really wanted the woman to trust him. He sat as far away from the purse as he could."', q:'Roger moves his chair away from the purse. Why is this important? What is he trying to show?', ph:'Think about trust, respect, and change...'},
+  {key:'chars_2', char:'Both characters', quote:'"She shut the door. And he never saw her again in his life."', q:'The ending is very short and quiet. Why do you think Hughes ends the story this way? What feeling does it give you?', ph:'Think about what is left unsaid between them...'},
+];
+
+const THEME_QS = [
+  {key:'theme_0', q:'Mrs. Jones uses kindness instead of punishment. Think of a time in your life or culture when someone chose kindness instead of punishment. What happened?', ph:'Use: "In my experience..." or "In my culture..."'},
+  {key:'theme_1', q:'Roger wanted blue suede shoes because he wanted to feel good about himself. What is something you have wanted but could not afford? How did it make you feel?', ph:'Make a personal connection to Roger\'s feelings...'},
+  {key:'theme_2', q:'Do you think Roger will change after this night? Use evidence from the story AND your own opinion.', ph:'Try: "I think Roger will/will not change because in the story... Also, I believe..."'},
+];
+
+const DISCUSS_QS = [
+  {key:'discuss_0', q:'Why does Mrs. Jones help Roger instead of calling the police?', starters:['I think Mrs. Jones helps Roger because…','In my opinion, she does not call the police because…','One reason she shows kindness is…']},
+  {key:'discuss_1', q:'Do you think what Mrs. Jones did was right or wrong? Why?', starters:['I think what she did was right / wrong because…','On one hand… but on the other hand…','In my culture, an adult would probably…']},
+  {key:'discuss_2', q:'How does Roger change from the beginning to the end of the story?', starters:['At the beginning of the story, Roger is…','By the end, Roger seems to feel…','One thing that changed Roger was when…']},
+  {key:'discuss_3', q:'What is the most important lesson in this story? Do you agree with it?', starters:['I think the most important lesson is…','I agree / disagree because in my experience…','This lesson reminds me of…']},
+];
+
+const DEVIL_STEPS = [
+  {key:'devil_0', type:'mc', label:'Step 1 — understand the words', q:'What does "devilish" mean in Mrs. Jones\'s sentence?', choices:['coming from wrongdoing; obtained in a dishonest way','very expensive and hard to find','made of uncomfortable material','belonging to someone very old'], ans:0, explain:'Mrs. Jones uses "devilish" to mean the shoes would come through stealing — a dishonest act.'},
+  {key:'devil_1', type:'mc', label:'Step 2 — the image', q:'When she says the shoes will "burn your feet," she does NOT mean:', choices:['The shoes will literally catch fire','The shoes will cause guilt and shame','The shoes will always remind him of his crime','Stolen things bring more pain than happiness'], ans:0, explain:'She does not mean the shoes will catch fire — this is figurative language. The "burning" represents guilt and conscience.'},
+  {key:'devil_2', type:'mc', label:'Step 3 — the real meaning', q:'What is Mrs. Jones really warning Roger about?', choices:['That stolen shoes are usually the wrong size','That when you get something through wrongdoing, it brings you more pain than happiness','That blue suede shoes go out of style quickly','That the police will recognize stolen shoes'], ans:1, explain:'Her real warning: things obtained through crime do not bring real joy. Guilt follows you — like shoes that burn your feet.'},
+  {key:'devil_3', type:'write', label:'Step 4 — your own words', q:'Write what this quote means in your own words. Then write: do you think Mrs. Jones is right?', ph:'In my own words, Mrs. Jones means... I think she is right / wrong because...'},
+  {key:'devil_4', type:'write', label:'Step 5 — connect to your culture', q:'Do you know a saying or proverb in your language with a similar meaning? Write it in your language AND explain it in English.', ph:'In my language: ...\nIn English, it means: ...'},
+];
+
+// All open-text question keys (for grading)
+const ALL_OPEN_KEYS = [
+  ...CHAR_QS.map(q=>q.key),
+  ...THEME_QS.map(q=>q.key),
+  ...DISCUSS_QS.map(q=>q.key),
+  ...DEVIL_STEPS.filter(s=>s.type==='write').map(s=>s.key),
+];
+
+// Combined question text lookup for dashboard
+const Q_TEXT_LOOKUP = {};
+[...COMP_QS, ...CHAR_QS, ...THEME_QS, ...DISCUSS_QS, ...DEVIL_STEPS, ...FILL_SENTS].forEach(q=>{
+  Q_TEXT_LOOKUP[q.key||q.key] = q.q || q.pre+' _____ '+q.post;
+});
+
+// ─── BUILD ALL TABS ───────────────────────────────────────────────────────────
+function buildAll() {
+  buildComp();
+  buildVocab();
+  seqCurrent = [...SEQ_EVENTS].sort(()=>Math.random()-0.5);
+  renderSeq();
+  buildChars();
+  buildTheme();
+  buildDiscuss();
+  buildDevil();
+  if (currentUser.isTeacher) buildDashboard();
+}
+
+// ── COMPREHENSION ──
+function buildComp() {
+  const c = document.getElementById('comp-list');
+  COMP_QS.forEach((q,i) => {
+    const d = document.createElement('div');
+    d.className = 'q-card'; d.id = 'cq'+i;
+    d.innerHTML = `<div class="q-num">Question ${i+1} of ${COMP_QS.length}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="choices">${q.choices.map((ch,j)=>`<button class="choice-btn" id="cb${i}_${j}" onclick="pickComp(${i},${j})">${ch}</button>`).join('')}</div>
+      <div class="fb-msg" id="cfb${i}"></div>
+      ${gradeFieldsHTML(q.key)}`;
+    c.appendChild(d);
+  });
+}
+
+function pickComp(qi, ci) {
+  const q = COMP_QS[qi];
+  const btns = document.getElementById('cq'+qi).querySelectorAll('.choice-btn');
+  btns.forEach(b=>b.disabled=true);
+  const fb = document.getElementById('cfb'+qi);
+  if (ci === q.ans) {
+    btns[ci].classList.add('correct');
+    fb.textContent = '✓ Correct!'; fb.className = 'fb-msg ok';
+    compScore++;
+  } else {
+    btns[ci].classList.add('wrong'); btns[q.ans].classList.add('correct');
+    fb.textContent = '✗ Not quite — the correct answer is highlighted.'; fb.className = 'fb-msg bad';
+  }
+  compAnswered++;
+  saveAnswer('comp', q.key, q.choices[ci]);
+  updateCompProg();
+}
+
+function updateCompProg() {
+  const pw = document.getElementById('comp-prog-wrap');
+  pw.style.display = 'flex';
+  const pct = Math.round(compScore / Math.max(compAnswered,1) * 100);
+  document.getElementById('comp-prog-fill').style.width = pct+'%';
+  document.getElementById('comp-prog-label').textContent = compScore+'/'+compAnswered;
+}
+
+// ── VOCAB ──
+function buildVocab() {
+  const wc = document.getElementById('vw-col'), dc = document.getElementById('vd-col');
+  const sd = [...VOCAB_PAIRS].sort(()=>Math.random()-0.5);
+  VOCAB_PAIRS.forEach(p=>{
+    const w = document.createElement('div'); w.className='vitem'; w.textContent=p.word; w.dataset.word=p.word;
+    w.onclick=()=>selectVWord(w); wc.appendChild(w);
+  });
+  sd.forEach(p=>{
+    const d = document.createElement('div'); d.className='vitem'; d.textContent=p.def; d.dataset.word=p.word;
+    d.onclick=()=>selectVDef(d); dc.appendChild(d);
+  });
+}
+function selectVWord(el){if(el.classList.contains('matched'))return;document.querySelectorAll('#vw-col .vitem').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');vocabSelWord=el;if(vocabSelDef)tryVMatch();}
+function selectVDef(el){if(el.classList.contains('matched'))return;document.querySelectorAll('#vd-col .vitem').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');vocabSelDef=el;if(vocabSelWord)tryVMatch();}
+function tryVMatch(){
+  const fb=document.getElementById('vocab-fb');
+  if(vocabSelWord.dataset.word===vocabSelDef.dataset.word){
+    vocabSelWord.classList.remove('sel');vocabSelWord.classList.add('matched');
+    vocabSelDef.classList.remove('sel');vocabSelDef.classList.add('matched');
+    vocabMatched++;
+    fb.textContent='✓ Correct match!'; fb.className='fb-msg ok';
+    saveAnswer('vocab','match_'+vocabSelWord.dataset.word,'matched');
+    if(vocabMatched===VOCAB_PAIRS.length){fb.textContent='All matched! Now try the sentences below.';document.getElementById('fill-section').style.display='block';buildFill();}
+  } else {
+    fb.textContent='✗ Not a match. Try again.'; fb.className='fb-msg bad';
+    vocabSelWord.classList.remove('sel'); vocabSelDef.classList.remove('sel');
+  }
+  vocabSelWord=null; vocabSelDef=null;
+  setTimeout(()=>{if(vocabMatched<VOCAB_PAIRS.length)fb.className='fb-msg';},1800);
+}
+let fillBuilt=false;
+function buildFill(){
+  if(fillBuilt)return; fillBuilt=true;
+  const c=document.getElementById('fill-list');
+  FILL_SENTS.forEach((s,i)=>{
+    const d=document.createElement('div'); d.className='q-card';
+    d.innerHTML=`<div class="q-num">Sentence ${i+1}</div>
+      <div class="fill-line">${s.pre} <input id="fi${i}" type="text" placeholder="…" autocomplete="off" oninput="debounceSave('vocab','${s.key}',this.value)"> ${s.post}</div>
+      <div class="fb-msg hint" style="display:block;font-size:13px;margin-top:6px">Hint: ${s.hint}</div>
+      <div class="fb-msg" id="ffb${i}"></div>`;
+    c.appendChild(d);
+  });
+}
+function checkFill(){
+  let ok=0;
+  FILL_SENTS.forEach((s,i)=>{
+    const v=document.getElementById('fi'+i).value.trim().toLowerCase();
+    const fb=document.getElementById('ffb'+i);
+    if(v===s.blank){fb.textContent='✓ Correct!';fb.className='fb-msg ok';ok++;}
+    else{fb.textContent=`✗ The answer is "${s.blank}".`;fb.className='fb-msg bad';}
+  });
+  const mf=document.getElementById('fill-total-fb');
+  mf.textContent=`You got ${ok} out of ${FILL_SENTS.length} correct.`;
+  mf.className=ok===FILL_SENTS.length?'fb-msg ok':'fb-msg hint';
+}
+function resetFill(){FILL_SENTS.forEach((_,i)=>{document.getElementById('fi'+i).value='';document.getElementById('ffb'+i).className='fb-msg';});document.getElementById('fill-total-fb').className='fb-msg';}
+
+// ── SEQUENCE ──
+function shuffleSeq(){seqCurrent=[...SEQ_EVENTS].sort(()=>Math.random()-0.5);renderSeq();document.getElementById('seq-fb').className='fb-msg';}
+function renderSeq(){
+  const l=document.getElementById('seq-list'); l.innerHTML='';
+  seqCurrent.forEach((ev,i)=>{
+    const d=document.createElement('div'); d.className='seq-item'; d.draggable=true; d.dataset.idx=i;
+    d.innerHTML=`<span style="font-size:16px;color:var(--muted);cursor:grab">⠿</span><span class="seq-num">${i+1}</span><span>${ev.t}</span>`;
+    d.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',i);d.classList.add('dragging');});
+    d.addEventListener('dragend',()=>d.classList.remove('dragging'));
+    d.addEventListener('dragover',e=>{e.preventDefault();d.classList.add('drag-over');});
+    d.addEventListener('dragleave',()=>d.classList.remove('drag-over'));
+    d.addEventListener('drop',e=>{e.preventDefault();d.classList.remove('drag-over');const f=parseInt(e.dataTransfer.getData('text/plain'));if(f!==i){const tmp=seqCurrent[f];seqCurrent[f]=seqCurrent[i];seqCurrent[i]=tmp;renderSeq();}});
+    l.appendChild(d);
+  });
+}
+function checkSeq(){
+  const fb=document.getElementById('seq-fb');
+  const correct=seqCurrent.every((ev,i)=>ev.o===i);
+  if(correct){fb.textContent='✓ Perfect! All 7 events are in the right order.';fb.className='fb-msg ok';}
+  else{const w=seqCurrent.filter((ev,i)=>ev.o!==i).length;fb.textContent=`${w} event${w>1?'s are':' is'} in the wrong place. Think about the beginning and ending.`;fb.className='fb-msg hint';}
+  saveAnswer('seq','order',seqCurrent.map(e=>e.o).join(','));
+}
+
+// ── CHARACTERS ──
+function buildChars(){
+  const c=document.getElementById('chars-list');
+  CHAR_QS.forEach((q,i)=>{
+    const d=document.createElement('div'); d.className='q-card';
+    d.innerHTML=`<div class="q-num">${q.char}</div>
+      <div class="quote-pull">${q.quote}</div>
+      <div class="q-text">${q.q}</div>
+      <textarea class="ans-textarea" id="cha${i}" placeholder="${q.ph}" oninput="debounceSave('chars','${q.key}',this.value)"></textarea>
+      <div class="row-btns"><button class="btn btn-ai" onclick="getAIFeedback('cha${i}','${q.key}','${q.q.replace(/'/g,"\\'")}')">Get AI feedback ↗</button></div>
+      <div class="ai-panel" id="ai_${q.key}"></div>
+      ${gradeFieldsHTML(q.key)}
+      <div class="teacher-feedback-display" id="tfd_${q.key}"></div>`;
+    c.appendChild(d);
+  });
+}
+
+// ── THEME ──
+function buildTheme(){
+  const c=document.getElementById('theme-list');
+  THEME_QS.forEach((q,i)=>{
+    const d=document.createElement('div'); d.className='q-card';
+    d.innerHTML=`<div class="q-num">Question ${i+1}</div>
+      <div class="q-text">${q.q}</div>
+      <textarea class="ans-textarea" id="tha${i}" placeholder="${q.ph}" oninput="debounceSave('theme','${q.key}',this.value)"></textarea>
+      <div class="row-btns"><button class="btn btn-ai" onclick="getAIFeedback('tha${i}','${q.key}','${q.q.replace(/'/g,"\\'")}')">Get AI feedback ↗</button></div>
+      <div class="ai-panel" id="ai_${q.key}"></div>
+      ${gradeFieldsHTML(q.key)}
+      <div class="teacher-feedback-display" id="tfd_${q.key}"></div>`;
+    c.appendChild(d);
+  });
+}
+
+// ── DISCUSSION ──
+function buildDiscuss(){
+  const c=document.getElementById('discuss-list');
+  DISCUSS_QS.forEach((q,i)=>{
+    const starters=q.starters.map(s=>`<div class="starter-box">${s}</div>`).join('');
+    const d=document.createElement('div'); d.className='q-card';
+    d.innerHTML=`<div class="q-num">Discussion question ${i+1}</div>
+      <div class="q-text">${q.q}</div>
+      ${starters}
+      <textarea class="ans-textarea" id="disa${i}" placeholder="Write your answer here…" style="margin-top:10px" oninput="debounceSave('discuss','${q.key}',this.value)"></textarea>
+      <div class="row-btns"><button class="btn btn-ai" onclick="getAIFeedback('disa${i}','${q.key}','${q.q.replace(/'/g,"\\'")}')">Get AI feedback ↗</button></div>
+      <div class="ai-panel" id="ai_${q.key}"></div>
+      ${gradeFieldsHTML(q.key)}
+      <div class="teacher-feedback-display" id="tfd_${q.key}"></div>`;
+    c.appendChild(d);
+  });
+}
+
+// ── DEVIL ──
+function buildDevil(){
+  const c=document.getElementById('devil-list');
+  DEVIL_STEPS.forEach((s,i)=>{
+    const d=document.createElement('div'); d.className='q-card'; d.id='dv'+i;
+    let inner=`<div class="q-num">${s.label}</div><div class="q-text">${s.q}</div>`;
+    if(s.type==='mc'){
+      inner+=`<div class="choices">${s.choices.map((ch,j)=>`<button class="choice-btn" id="dopt${i}_${j}" onclick="pickDevil(${i},${j})">${ch}</button>`).join('')}</div>
+        <div class="fb-msg" id="dfb${i}"></div>`;
+    } else {
+      inner+=`<textarea class="ans-textarea" id="dwa${i}" placeholder="${s.ph}" oninput="debounceSave('devil','${s.key}',this.value)"></textarea>
+        <div class="row-btns"><button class="btn btn-ai" onclick="getAIFeedback('dwa${i}','${s.key}','${s.q.replace(/'/g,"\\'")}')">Get AI feedback ↗</button></div>
+        <div class="ai-panel" id="ai_${s.key}"></div>
+        ${gradeFieldsHTML(s.key)}
+        <div class="teacher-feedback-display" id="tfd_${s.key}"></div>`;
+    }
+    d.innerHTML=inner;
+    c.appendChild(d);
+  });
+}
+const devilDone={};
+function pickDevil(si,ci){
+  if(devilDone[si])return; devilDone[si]=true;
+  const s=DEVIL_STEPS[si];
+  for(let j=0;j<s.choices.length;j++){const b=document.getElementById(`dopt${si}_${j}`);b.disabled=true;if(j===s.ans)b.classList.add('correct');else if(j===ci&&ci!==s.ans)b.classList.add('wrong');}
+  const fb=document.getElementById('dfb'+si);
+  fb.textContent=(ci===s.ans?'✓ Correct! ':'')+s.explain;
+  fb.className=ci===s.ans?'fb-msg ok':'fb-msg hint';
+  saveAnswer('devil',s.key,s.choices[ci]);
+}
+
+// ── GRADE FIELDS HTML ──
+function gradeFieldsHTML(qkey) {
+  if (!currentUser) return '';
+  if (currentUser.isTeacher) {
+    return `<div class="teacher-fields visible" id="tf_${qkey}">
+      <div style="font-size:11px;font-weight:500;color:var(--teacher);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Teacher grading</div>
+      <div class="tf-row">
+        <div class="tf-score-wrap"><div class="tf-label">Points</div><input class="tf-score-input" id="ts_${qkey}" type="number" min="0" max="10" placeholder="—"></div>
+        <div class="tf-comment-wrap"><div class="tf-label">Comment</div><textarea class="tf-comment-input" id="tc_${qkey}" placeholder="Add feedback for this question…"></textarea></div>
+      </div>
+      <button class="tf-save-btn" onclick="saveGradeField('${qkey}')">Save grade</button>
+      <span style="font-size:12px;color:var(--green);margin-left:8px;display:none" id="tfs_${qkey}">Saved!</span>
+    </div>`;
+  } else {
+    return `<div class="teacher-feedback-display" id="tfd_${qkey}">
+      <div class="tfd-score" id="tfd-score_${qkey}"></div>
+      <div class="tfd-comment" id="tfd-comment_${qkey}"></div>
+    </div>`;
+  }
+}
+
+async function saveGradeField(qkey) {
+  const scoreEl = document.getElementById('ts_'+qkey);
+  const commentEl = document.getElementById('tc_'+qkey);
+  if (!scoreEl || !commentEl) return;
+  const score = scoreEl.value;
+  const comment = commentEl.value;
+  const username = document.getElementById('dash-student-select')?.value || currentUser.username;
+  await saveGrade(username, qkey, score, comment);
+  const msg = document.getElementById('tfs_'+qkey);
+  if (msg) { msg.style.display='inline'; setTimeout(()=>msg.style.display='none',2000); }
+  // Update total score from all grades
+  await recalcAndDisplayTotal(username);
+}
+
+async function recalcAndDisplayTotal(username) {
+  const grades = await loadGrades(username);
+  let total = 0;
+  Object.values(grades).forEach(g => { if (g.score !== null && g.score !== '') total += parseFloat(g.score)||0; });
+  // Update displayed total on top-score
+  const existing = await loadTotalScore(username);
+  if (username === currentUser.username && existing) showTotalScore(existing);
+}
+
+// ─── RESTORE / APPLY ──────────────────────────────────────────────────────────
+function restoreAnswers(answers) {
+  // Comprehension MC answers
+  COMP_QS.forEach((q,i)=>{
+    const saved = answers['comp_'+q.key];
+    if (saved) {
+      const idx = q.choices.indexOf(saved);
+      if (idx>=0) {
+        const btns = document.querySelectorAll(`#cq${i} .choice-btn`);
+        btns.forEach(b=>b.disabled=true);
+        if (idx===q.ans) btns[idx].classList.add('correct');
+        else { btns[idx].classList.add('wrong'); btns[q.ans].classList.add('correct'); }
+        compAnswered++; if(idx===q.ans) compScore++;
+      }
+      updateCompProg();
+    }
+  });
+  // Vocab matches
+  VOCAB_PAIRS.forEach(p=>{
+    if (answers['vocab_match_'+p.word]==='matched') {
+      const ws=document.querySelectorAll('#vw-col .vitem');
+      const ds=document.querySelectorAll('#vd-col .vitem');
+      ws.forEach(el=>{ if(el.dataset.word===p.word) el.classList.add('matched'); });
+      ds.forEach(el=>{ if(el.dataset.word===p.word) el.classList.add('matched'); });
+      vocabMatched++;
+    }
+  });
+  if(vocabMatched===VOCAB_PAIRS.length){ document.getElementById('fill-section').style.display='block'; buildFill(); }
+  // Fill blanks
+  FILL_SENTS.forEach((s,i)=>{
+    const v=answers['vocab_'+s.key]; if(v&&document.getElementById('fi'+i)) document.getElementById('fi'+i).value=v;
+  });
+  // Sequence
+  const seqSaved=answers['seq_order'];
+  if(seqSaved){ const order=seqSaved.split(',').map(Number); seqCurrent=order.map(o=>SEQ_EVENTS.find(e=>e.o===o)).filter(Boolean); renderSeq(); }
+  // Text areas
+  CHAR_QS.forEach((q,i)=>{ const v=answers['chars_'+q.key]; if(v&&document.getElementById('cha'+i)) document.getElementById('cha'+i).value=v; });
+  THEME_QS.forEach((q,i)=>{ const v=answers['theme_'+q.key]; if(v&&document.getElementById('tha'+i)) document.getElementById('tha'+i).value=v; });
+  DISCUSS_QS.forEach((q,i)=>{ const v=answers['discuss_'+q.key]; if(v&&document.getElementById('disa'+i)) document.getElementById('disa'+i).value=v; });
+  DEVIL_STEPS.filter(s=>s.type==='write').forEach((s,i)=>{ const v=answers['devil_'+s.key]; if(v&&document.getElementById('dwa'+(i+3))) document.getElementById('dwa'+(i+3)).value=v; });
+}
+
+function applyGrades(grades) {
+  if (currentUser.isTeacher) {
+    // Teacher: populate their grading fields if viewing their own
+    return;
+  }
+  // Student: show teacher feedback
+  Object.entries(grades).forEach(([qkey, g])=>{
+    const scoreEl = document.getElementById('tfd-score_'+qkey);
+    const commentEl = document.getElementById('tfd-comment_'+qkey);
+    const wrapEl = document.getElementById('tfd_'+qkey);
+    if (scoreEl && (g.score!==null && g.score!=='')) {
+      scoreEl.textContent = 'Points: '+g.score;
+      if (commentEl && g.comment) commentEl.textContent = g.comment;
+      if (wrapEl) wrapEl.classList.add('visible');
+    }
+  });
+}
+
+function showTotalScore(score) {
+  document.getElementById('score-display').classList.add('visible');
+  document.getElementById('score-display-val').textContent = score;
+  document.getElementById('top-score-badge').textContent = 'Score: '+score;
+  document.getElementById('top-score-badge').classList.add('visible');
+}
+
+// ─── AI FEEDBACK ─────────────────────────────────────────────────────────────
+async function getAIFeedback(textareaId, qkey, questionText) {
+  const ta = document.getElementById(textareaId);
+  const panel = document.getElementById('ai_'+qkey);
+  if (!ta || !panel) return;
+  const answer = ta.value.trim();
+  if (!answer) { panel.textContent='Please write your answer first, then click Get AI feedback.'; panel.className='ai-panel visible'; return; }
+  panel.innerHTML='<span class="ai-thinking">Reading your answer…</span>';
+  panel.className='ai-panel visible';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':'','anthropic-version':'2023-06-01'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:400,
+        system:'You are a warm, encouraging ELD teacher giving feedback to an intermediate high school English learner. Keep feedback short (3–5 sentences). First say one specific thing they did well. Then give one gentle suggestion to improve their answer or language. Use simple English. Never be harsh.',
+        messages:[{role:'user',content:`Question: ${questionText}\n\nStudent answer: ${answer}\n\nGive feedback.`}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'Could not get feedback right now. Ask your teacher for help.';
+    panel.textContent = text;
+  } catch(e) {
+    panel.textContent = 'AI feedback is not available right now. Your teacher will give you written feedback.';
+  }
+}
+
+// ─── DEBOUNCE SAVE ────────────────────────────────────────────────────────────
+function debounceSave(tab, qkey, value) {
+  clearTimeout(saveTimer);
+  showSaveDot('saving');
+  saveTimer = setTimeout(()=>saveAnswer(tab, qkey, value), 1200);
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(id, el) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ─── TEACHER DASHBOARD ───────────────────────────────────────────────────────
+function buildDashboard() {
+  const sel = document.getElementById('dash-student-select');
+  ROSTER.filter(r=>!TEACHER_USERNAMES.includes(r.username)).forEach(r=>{
+    const o = document.createElement('option'); o.value=r.username; o.textContent=r.name;
+    sel.appendChild(o);
+  });
+}
+
+async function loadDashStudent() {
+  const username = document.getElementById('dash-student-select').value;
+  if (!username) return;
+  const studentName = ROSTER.find(r=>r.username===username)?.name || username;
+  document.getElementById('dash-student-name-label').textContent = studentName;
+  document.getElementById('dash-total-row').style.display='flex';
+  // Load total
+  const total = await loadTotalScore(username);
+  document.getElementById('dash-total-input').value = total || '';
+  // Load answers + grades
+  const answers = await loadAnswers(username);
+  const grades = await loadGrades(username);
+  renderDashAnswers(username, answers, grades);
+}
+
+function renderDashAnswers(username, answers, grades) {
+  const c = document.getElementById('dash-answers'); c.innerHTML='';
+  const sections = [
+    {label:'Comprehension', qs: COMP_QS.map(q=>({key:q.key,text:q.q}))},
+    {label:'Fill in the blanks', qs: FILL_SENTS.map(q=>({key:q.key,text:q.pre+' _____ '+q.post}))},
+    {label:'Characters', qs: CHAR_QS.map(q=>({key:q.key,text:q.q}))},
+    {label:'Theme', qs: THEME_QS.map(q=>({key:q.key,text:q.q}))},
+    {label:'Discussion', qs: DISCUSS_QS.map(q=>({key:q.key,text:q.q}))},
+    {label:'Devilish shoes', qs: DEVIL_STEPS.map(s=>({key:s.key,text:s.q}))},
+  ];
+  sections.forEach(sec=>{
+    const h=document.createElement('p'); h.style.cssText='font-family:Playfair Display,serif;font-size:16px;font-weight:500;color:var(--teacher);margin:1.5rem 0 8px'; h.textContent=sec.label; c.appendChild(h);
+    sec.qs.forEach(q=>{
+      const answerKey = Object.keys(answers).find(k=>k.endsWith(q.key)) || q.key;
+      const ans = answers[answerKey] || answers[q.key] || '';
+      const g = grades[q.key] || {score:'',comment:''};
+      const d=document.createElement('div'); d.className='dash-q';
+      d.innerHTML=`<div class="dash-q-label">${q.key}</div>
+        <div class="dash-q-text">${q.text}</div>
+        <div class="dash-q-answer">${ans?ans:'<span class="no-answer">No answer yet</span>'}</div>
+        <div class="dash-grade-row">
+          <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--teacher);font-weight:500">Points</div><input class="dash-score-input" id="dsc_${q.key}" type="number" min="0" max="10" value="${g.score||''}" placeholder="—"></div>
+          <div style="display:flex;flex-direction:column;gap:3px;flex:1"><div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--teacher);font-weight:500">Comment</div><textarea class="dash-comment-input" id="dco_${q.key}" placeholder="Add a comment…">${g.comment||''}</textarea></div>
+          <button class="dash-save-btn" onclick="dashSaveGrade('${username}','${q.key}')">Save</button>
+        </div>
+        <div class="dash-saved-msg" id="dsm_${q.key}">Saved!</div>`;
+      c.appendChild(d);
+    });
+  });
+}
+
+async function dashSaveGrade(username, qkey) {
+  const score = document.getElementById('dsc_'+qkey)?.value || '';
+  const comment = document.getElementById('dco_'+qkey)?.value || '';
+  await saveGrade(username, qkey, score, comment);
+  const msg = document.getElementById('dsm_'+qkey);
+  if(msg){msg.style.display='block';setTimeout(()=>msg.style.display='none',2000);}
+}
+
+async function saveTotalScore() {
+  const username = document.getElementById('dash-student-select').value;
+  if (!username) return;
+  const score = document.getElementById('dash-total-input').value;
+  await saveTotalScoreDB(username, score);
+  const msg = document.getElementById('total-saved-msg');
+  msg.style.display='inline'; setTimeout(()=>msg.style.display='none',2000);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+const saved = sessionStorage.getItem('tyma_user');
+if (saved) {
+  try { currentUser = JSON.parse(saved); startApp(); }
+  catch { sessionStorage.removeItem('tyma_user'); }
+}
+</script>
+</body>
+</html>
