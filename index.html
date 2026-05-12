@@ -100,6 +100,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .fb-msg.bad { background: var(--red-light); color: var(--red); display: block; }
 .fb-msg.hint { background: var(--amber-light); color: var(--amber); display: block; }
 
+/* ── STUDENT MODE: hide teacher fields ── */
+body.student-mode .teacher-fields { display: none !important; }
+
 /* ── TEACHER GRADE FIELDS ── */
 .teacher-fields { margin-top: 10px; padding: 10px 12px; background: var(--teacher-light); border-radius: var(--radius); border: 1px dashed #c9b8e8; display: none; }
 .teacher-fields.visible { display: block; }
@@ -333,7 +336,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://lhmwtfyceilgndpygivj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxobXd0ZnljZWlsZ25kcHlnaXZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk5MDIsImV4cCI6MjA5MTcxNTkwMn0.0uIXyctHMfTN4doWYn2JJ260swD5b-t0T-oDMSIPtBU';
-const ANTHROPIC_KEY = ''; // Leave empty — Claude feedback via proxy not available in plain HTML; handled via AI button text
+const PROXY_URL = SUPABASE_URL + '/functions/v1/anthropic-proxy';
 
 // ─── ROSTER ───────────────────────────────────────────────────────────────────
 const ROSTER = [
@@ -466,6 +469,7 @@ async function startApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('top-user-name').textContent = currentUser.firstName;
+  document.body.classList.toggle('student-mode', !currentUser.isTeacher);
   if (currentUser.isTeacher) {
     document.getElementById('teacher-tab-btn').style.display = 'inline-block';
   }
@@ -702,8 +706,7 @@ function buildChars(){
       <textarea class="ans-textarea" id="cha${i}" placeholder="${q.ph}" oninput="debounceSave('chars','${q.key}',this.value)"></textarea>
       <div class="row-btns"><button class="btn btn-ai" onclick="getAIFeedback('cha${i}','${q.key}','${q.q.replace(/'/g,"\\'")}')">Get AI feedback ↗</button></div>
       <div class="ai-panel" id="ai_${q.key}"></div>
-      ${gradeFieldsHTML(q.key)}
-      <div class="teacher-feedback-display" id="tfd_${q.key}"></div>`;
+      ${gradeFieldsHTML(q.key)}`;
     c.appendChild(d);
   });
 }
@@ -718,8 +721,7 @@ function buildTheme(){
       <textarea class="ans-textarea" id="tha${i}" placeholder="${q.ph}" oninput="debounceSave('theme','${q.key}',this.value)"></textarea>
       <div class="row-btns"><button class="btn btn-ai" onclick="getAIFeedback('tha${i}','${q.key}','${q.q.replace(/'/g,"\\'")}')">Get AI feedback ↗</button></div>
       <div class="ai-panel" id="ai_${q.key}"></div>
-      ${gradeFieldsHTML(q.key)}
-      <div class="teacher-feedback-display" id="tfd_${q.key}"></div>`;
+      ${gradeFieldsHTML(q.key)}`;
     c.appendChild(d);
   });
 }
@@ -736,8 +738,7 @@ function buildDiscuss(){
       <textarea class="ans-textarea" id="disa${i}" placeholder="Write your answer here…" style="margin-top:10px" oninput="debounceSave('discuss','${q.key}',this.value)"></textarea>
       <div class="row-btns"><button class="btn btn-ai" onclick="getAIFeedback('disa${i}','${q.key}','${q.q.replace(/'/g,"\\'")}')">Get AI feedback ↗</button></div>
       <div class="ai-panel" id="ai_${q.key}"></div>
-      ${gradeFieldsHTML(q.key)}
-      <div class="teacher-feedback-display" id="tfd_${q.key}"></div>`;
+      ${gradeFieldsHTML(q.key)}`;
     c.appendChild(d);
   });
 }
@@ -755,8 +756,7 @@ function buildDevil(){
       inner+=`<textarea class="ans-textarea" id="dwa${i}" placeholder="${s.ph}" oninput="debounceSave('devil','${s.key}',this.value)"></textarea>
         <div class="row-btns"><button class="btn btn-ai" onclick="getAIFeedback('dwa${i}','${s.key}','${s.q.replace(/'/g,"\\'")}')">Get AI feedback ↗</button></div>
         <div class="ai-panel" id="ai_${s.key}"></div>
-        ${gradeFieldsHTML(s.key)}
-        <div class="teacher-feedback-display" id="tfd_${s.key}"></div>`;
+        ${gradeFieldsHTML(s.key)}`;
     }
     d.innerHTML=inner;
     c.appendChild(d);
@@ -890,25 +890,31 @@ async function getAIFeedback(textareaId, qkey, questionText) {
   const panel = document.getElementById('ai_'+qkey);
   if (!ta || !panel) return;
   const answer = ta.value.trim();
-  if (!answer) { panel.textContent='Please write your answer first, then click Get AI feedback.'; panel.className='ai-panel visible'; return; }
-  panel.innerHTML='<span class="ai-thinking">Reading your answer…</span>';
-  panel.className='ai-panel visible';
+  if (!answer) {
+    panel.textContent = 'Please write your answer first, then click Get AI feedback.';
+    panel.className = 'ai-panel visible';
+    return;
+  }
+  panel.innerHTML = '<span class="ai-thinking">Reading your answer…</span>';
+  panel.className = 'ai-panel visible';
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':'','anthropic-version':'2023-06-01'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:400,
-        system:'You are a warm, encouraging ELD teacher giving feedback to an intermediate high school English learner. Keep feedback short (3–5 sentences). First say one specific thing they did well. Then give one gentle suggestion to improve their answer or language. Use simple English. Never be harsh.',
-        messages:[{role:'user',content:`Question: ${questionText}\n\nStudent answer: ${answer}\n\nGive feedback.`}]
-      })
+    const res = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+      },
+      body: JSON.stringify({ studentAnswer: answer, questionText })
     });
     const data = await res.json();
-    const text = data.content?.[0]?.text || 'Could not get feedback right now. Ask your teacher for help.';
-    panel.textContent = text;
+    if (data.feedback) {
+      panel.textContent = data.feedback;
+    } else {
+      panel.textContent = data.error || 'Could not get feedback right now. Your teacher will give you written feedback.';
+    }
   } catch(e) {
-    panel.textContent = 'AI feedback is not available right now. Your teacher will give you written feedback.';
+    panel.textContent = 'Could not connect right now. Your teacher will give you written feedback.';
   }
 }
 
