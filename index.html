@@ -213,6 +213,20 @@ body.student-mode .teacher-fields { display: none !important; }
     <div class="login-sub">by Langston Hughes — Post-Reading Activities</div>
     <label class="field-label" for="inp-name">Your first name</label>
     <input class="field-input" id="inp-name" type="text" placeholder="e.g. Maria" autocomplete="off">
+    <label class="field-label" for="inp-lang">My home language</label>
+    <select class="field-input" id="inp-lang">
+      <option value="English">English</option>
+      <option value="Spanish">Spanish</option>
+      <option value="Cantonese">Cantonese</option>
+      <option value="Mandarin">Mandarin</option>
+      <option value="Vietnamese">Vietnamese</option>
+      <option value="Arabic">Arabic</option>
+      <option value="French">French</option>
+      <option value="Portuguese">Portuguese</option>
+      <option value="Tagalog">Tagalog</option>
+      <option value="Khmer">Khmer</option>
+      <option value="Other">Other language</option>
+    </select>
     <label class="field-label" for="inp-user">Username</label>
     <input class="field-input" id="inp-user" type="text" placeholder="e.g. emluo4" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">Enter activity</button>
@@ -370,7 +384,7 @@ const ROSTER = [
   {name:'Tobias Rugger', username:'teacher'},
   {name:'Guest', username:'other'},
 ];
-const TEACHER_USERNAMES = ['teacher','other'];
+const TEACHER_USERNAMES = ['teacher']; // only 'teacher' gets dashboard; 'other' is student mode
 const USERNAME_SET = new Set(ROSTER.map(r=>r.username.toLowerCase()));
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -453,7 +467,8 @@ function doLogin() {
   if (!USERNAME_SET.has(username)) { err.textContent = 'That username is not on the class list. Please check your spelling and try again.'; err.style.display = 'block'; return; }
   err.style.display = 'none';
   const isTeacher = TEACHER_USERNAMES.includes(username);
-  currentUser = {username, firstName, isTeacher};
+  const nativeLang = document.getElementById('inp-lang')?.value || 'English';
+  currentUser = {username, firstName, isTeacher, nativeLang};
   sessionStorage.setItem('tyma_user', JSON.stringify(currentUser));
   startApp();
 }
@@ -898,6 +913,7 @@ async function getAIFeedback(textareaId, qkey, questionText) {
   panel.innerHTML = '<span class="ai-thinking">Reading your answer…</span>';
   panel.className = 'ai-panel visible';
   try {
+    const nativeLang = currentUser.nativeLang || 'English';
     const res = await fetch(PROXY_URL, {
       method: 'POST',
       headers: {
@@ -905,11 +921,15 @@ async function getAIFeedback(textareaId, qkey, questionText) {
         'apikey': SUPABASE_KEY,
         'Authorization': 'Bearer ' + SUPABASE_KEY,
       },
-      body: JSON.stringify({ studentAnswer: answer, questionText })
+      body: JSON.stringify({ studentAnswer: answer, questionText, nativeLang })
     });
     const data = await res.json();
     if (data.feedback) {
-      panel.textContent = data.feedback;
+      if (nativeLang && nativeLang !== 'English' && data.translation) {
+        panel.innerHTML = data.feedback + '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #c5d8ec;font-size:13px;color:var(--accent-mid)">' + data.translation + '</div>';
+      } else {
+        panel.textContent = data.feedback;
+      }
     } else {
       panel.textContent = data.error || 'Could not get feedback right now. Your teacher will give you written feedback.';
     }
